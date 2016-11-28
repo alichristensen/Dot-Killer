@@ -1,6 +1,5 @@
 var canvas 	= document.getElementById("canvas"), 
 	ctx 	= canvas.getContext("2d");
-
 var colors    = ["#76ff03", "#00e5ff", "white", "#d500f9", "#ffff00", "#ff3d00"];
 
 //setup 2d array to hold ball colors
@@ -92,10 +91,10 @@ function draw() {
 		yStart -= ballRadius*2;
 	}
 
-	if (right) {
+	if (right && playerStartX < canvas.width-10) {
 		arrStartX+=3;
 		playerStartX+=3;
-	} else if (left) {
+	} else if (left && playerStartX > 10) {
 		arrStartX-=3;
 		playerStartX-=3;
 	}
