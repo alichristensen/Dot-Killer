@@ -12,18 +12,19 @@ var player = {
   },
   ball = new Ball(player.x,player.y+player.h), ballArray = [], shooted = false;
 // balls builder
-function Ball(x, y) {
+function Ball(x, y, color) {
   this.x = x;
   this.y = y;
   this.r = BALL_RADIUS;
-  this.color = colors[Math.floor(Math.random() * colors.length)];
+  this.color = color;
 }
+//random colors: colors[Math.floor(Math.random() * colors.length)]
 // populate an array of balls with the coordinates for placement on canvas
 function createBallArray(){
   var ballX = 12,
     ballY = CANVAS_H + (BALL_RADIUS) - GRID_ROWS*(BALL_RADIUS*2);
   for(var i = 0; i < GRID_ROWS*GRID_COLS;i++){
-    ballArray.push(new Ball(ballX, ballY));
+    ballArray.push(new Ball(ballX, ballY, colors[Math.floor(Math.random() * colors.length)]));
     ballX += BALL_RADIUS*2;
     if(ballX > CANVAS_W - BALL_RADIUS){
       ballX = 12; ballY += BALL_RADIUS*2;
@@ -57,8 +58,11 @@ function collisionCheck(){
   for(var i = 0; i < ballArray.length; i++){
     var dist = Math.sqrt(Math.pow(ballArray[i].x - ball.x,2)+Math.pow(ballArray[i].y - ball.y,2));
     if (dist<(ballArray[i].r + ball.r)){
-      if(ballArray[i].color === ball.color)
-        ballArray.splice(i, 1);
+      if(ballArray[i].color === ball.color) {
+      	ballArray.splice(i, 1);
+      } else {
+      	ballArray.splice(i, 0, new Ball(ball.x, ball.y-3, ball.color));
+      }
       return true;
     }
   }
