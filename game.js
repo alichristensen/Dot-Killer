@@ -1,6 +1,6 @@
-var canvas 	= document.getElementById("canvas"), 
-	ctx 	= canvas.getContext("2d");
-var colors    = ["#76ff03", "#00e5ff", "white", "#d500f9", "#ffff00", "#ff3d00"];
+var canvas = document.getElementById("canvas"),
+    ctx	= canvas.getContext("2d");
+var colors = ["#76ff03", "#00e5ff", "white", "#d500f9", "#ffff00", "#ff3d00"];
 
 //some thoughts: I think defining the size of the ball and player should be relative to the
 //canvas dimentions so that if we decide to change the canvas size then all the game objects
@@ -9,33 +9,33 @@ var colors    = ["#76ff03", "#00e5ff", "white", "#d500f9", "#ffff00", "#ff3d00"]
 //could calculate the ball radius as BALL_RADIUS = (CANVAS_W / GRID_COLS) * 0.5 which will make the
 //BALL_RADIUS always scale to be the right size to fill the canvas appropriately across the grid
 
-//global constants 
+//global constants
 var BALL_RADIUS = 8,
     GRID_ROWS = 15,
     GRID_COLS = 42,
     CANVAS_W = 680,
     CANVAS_H = 580,
     BALL_SPEED = 100,//pixels per second
-    PLAYER_SPEED = 200;//pixels per second
+    PLAYER_SPEED = 200,//pixels per second
+    MAX_PARTICLES = 300;
 
 var player = null,//the player
     gameObjects = [],//holds all the balls
     lastTick = 0;//used to track how much time passes between frames
 
-
 //moved this stuff to the top for organization and clarity
-var xStart = 12, 
+var xStart = 12,
     yStart = canvas.height-10,
     ballRadius = 8;
 
-var left  = false, 
-    right = false, 
+var left  = false,
+    right = false,
     space = false;
 
 var arrStartX = canvas.width/2,
-	arrStartY = (ballRadius*2)+10, 
-	playerStartX = canvas.width/2, 
-	playerStartY = ballRadius;
+arrStartY = (ballRadius*2)+10,
+    playerStartX = canvas.width/2,
+    playerStartY = ballRadius;
 
 //helper class for Vector2 maths
 class Point{
@@ -67,7 +67,6 @@ class Point{
         }
         return this;
     }
-        
 
     static distance(A, B){
         //returns the distance between two Point objects
@@ -104,11 +103,10 @@ class Ball{
     draw(ctx){
         ctx.beginPath();
         ctx.beginPath();
-	ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI*2);
-	ctx.fillStyle = this.color;
-	ctx.fill();
-	ctx.closePath();
-
+        ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.closePath();
     }
 }
 
@@ -136,7 +134,7 @@ class Player{
         return this.position.x + this.size.x * 0.5;
     }
 
-    update(dt){ 
+    update(dt){
         let dir = 0;
         let x = player.position.x;
         if (left){
@@ -144,7 +142,7 @@ class Player{
         }
         if (right){
             dir += 1
-        } 
+        }
         //if left and right are down dir will go back to 0 and the player will not move
 
         x += dir * PLAYER_SPEED * dt;
@@ -203,7 +201,7 @@ class Player{
             ctx.beginPath();
             ctx.arc(this.position.x, this.bottom(), BALL_RADIUS, 0, Math.PI*2);
             ctx.fillStyle = this.nextProjectileColor;
-            ctx.fill(); 
+            ctx.fill();
         }
         else {
             this.projectile.draw(ctx);
@@ -211,10 +209,60 @@ class Player{
     }
 }
 
+class ParticleSystem {
+
+    constructor(){
+        this.maxParticles = MAX_PARTICLES;
+        this.particles = [];
+    }
+
+    addParticle(particle){
+        if (this.particles.length < MAX_PARTICLES){
+            this.particles.push(particle);
+        }
+    }
+
+    update(dt){
+        //dt is delta time - the amount of time passed between frames in seconds
+        let part = null;//temporary var to hold references to particles in the for loop below
+        for (let i = this.particles.length; i > -1; i--){
+            part = this.particles[i];
+            part.life -= dt;
+            if (!part.life <= 0){
+                this.particles.splice(i, 1);
+                continue;
+            }
+            part.position.x += part.velocity.x * part.speed * dt;
+            part.position.y += part.velocity.y * part.speed * dt;
+        }
+    }
+
+    draw (ctx){
+        this.particles.forEach( (part) => {
+            ctx.fillStyle = part.color;
+            ctx.beginPath();
+            ctx.arc(part.position.x, part.position.y, part.size, 0, Math.PI*2,true);
+            ctx.fill();
+        });
+    }
+
+    //call this static method to get a new particle, then change properties and add it to
+    //a ParticleSystem object by calling addParticle
+    static CreateParticle(){
+        return {
+            position: new Point(0,0),
+            velocity: new Point(Math.random(),Math.random()).normalize(),//trajectory
+            speed: 100,//pixles per second
+            color: '#fff',
+            life: 1.0,//time passed will be subtracted from this - when <= 0 - destory
+            size: 2
+        }
+    }
+}
 //setup 2d array to hold ball colors
 var gameColor = new Array(15);
 for (var i=0; i<15; i++) {
-	gameColor[i] = new Array(42);
+    gameColor[i] = new Array(42);
 }
 
 //created function for initializing the balls
@@ -231,57 +279,52 @@ function initGrid(){
     }
 }
 
-document.addEventListener("keydown", keyDownHandler, false);
-document.addEventListener("keyup", keyUpHandler, false);
-
 for (var a=0; a<15; a++) {
-	for (var b=0; b<42; b++) {
-		gameColor[a][b] = color_randomizer();
-	}
+    for (var b=0; b<42; b++) {
+        gameColor[a][b] = color_randomizer();
+    }
 }
 
 function color_randomizer() {
-	var num = Math.floor(Math.random()*6);
-	return colors[num];
+    var num = Math.floor(Math.random()*6);
+    return colors[num];
 }
 
 function balls_draw(x, y, color) {
-	ctx.beginPath();
-	ctx.arc(x, y, ballRadius, 0, Math.PI*2);
-	ctx.fillStyle = color; 
-	ctx.fill(); 
-	ctx.closePath();
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.closePath();
 }
 
 function game_ball_draw(color) {
-	ctx.beginPath();
-	ctx.arc(playerStartX, playerStartY, ballRadius, 0, Math.PI*2);
-	ctx.fillStyle = color;
-	ctx.fill();
-	ctx.closePath();
+    ctx.beginPath();
+    ctx.arc(playerStartX, playerStartY, ballRadius, 0, Math.PI*2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.closePath();
 }
 
 function arrow_draw(x, y) {
-	ctx.beginPath();
-	ctx.rect(x, y, 1, 50);
-	ctx.fillStyle = "white";
-	ctx.fill();
-	ctx.closePath();
+    ctx.beginPath();
+    ctx.rect(x, y, 1, 50);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.closePath();
 }
 
-var playerColor = color_randomizer();
-
 function draw() {
-        let timepassed = (Date.now() - lastTick) * 0.001;
-        player.update(timepassed);
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let timepassed = (Date.now() - lastTick) * 0.001;
+    player.update(timepassed);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        gameObjects.forEach( (ball) => {
-            ball.draw(ctx);
-        });
-        player.draw(ctx);
-    
-        lastTick = Date.now();
+    gameObjects.forEach( (ball) => {
+        ball.draw(ctx);
+    });
+    player.draw(ctx);
+
+    lastTick = Date.now();
 }
 
 function detect_collision(x, y) {
@@ -306,24 +349,28 @@ function detect_collision(x, y) {
 }
 
 function keyDownHandler(e) {
-	if (e.keyCode == 39) {
-		right = true;
-	} else if (e.keyCode == 37) {
-		left = true;
-	} else if (e.keyCode == 32) {
-		space = true;
-	}
+    if (e.keyCode == 39) {
+            right = true;
+    } else if (e.keyCode == 37) {
+            left = true;
+    } else if (e.keyCode == 32) {
+            space = true;
+    }
 }
 
 function keyUpHandler(e) {
-	if (e.keyCode == 39) {
-		right = false;
-	} else if (e.keyCode == 37) {
-		left = false;
-	} else if (e.keyCode == 32) {
-		space = false;
-	}
+    if (e.keyCode == 39) {
+        right = false;
+    } else if (e.keyCode == 37) {
+        left = false;
+    } else if (e.keyCode == 32) {
+        space = false;
+    }
 }
+
+//register events
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
 //passing relative scales of the canvas size so the player size changes with the canvas
 player = new Player(CANVAS_W * 0.5, CANVAS_H * 0.05, CANVAS_W * 0.01, CANVAS_H * .10);
 initGrid();
