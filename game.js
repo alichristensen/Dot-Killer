@@ -217,17 +217,6 @@ for (var i=0; i<15; i++) {
 	gameColor[i] = new Array(42);
 }
 
-//setup 3d array to hold ball locations
-/*
-var ballLocations = new Array(15);
-for (var i=0; i<15; i++) {
-	ballLocations[i] = new Array(42);
-	for (var a=0; a<42; a++) {
-            ballLocations[i][a] = new Array(2);
-	}
-}
-*/
-
 //created function for initializing the balls
 function initGrid(){
     //clear the existing gameObjects if any
@@ -241,9 +230,6 @@ function initGrid(){
         }
     }
 }
-
-
-
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
@@ -296,42 +282,6 @@ function draw() {
         player.draw(ctx);
     
         lastTick = Date.now();
-        /*
-	game_ball_draw(playerColor);
-	arrow_draw(arrStartX, arrStartY);
-	//15 high by 42 accross
-	for (var a=0; a<15; a++) {
-		if (a==0) {
-			yStart = canvas.height-10;
-		}
-		for (var b=0; b<42; b++) {
-			ballLocations[a][b][0] = xStart;
-			ballLocations[a][b][1] = yStart;
-			balls_draw(xStart, yStart, gameColor[a][b]);
-			xStart += ballRadius*2;
-		}
-		xStart = 12;
-		yStart -= ballRadius*2;
-	}
-
-	if (right && playerStartX < canvas.width-10) {
-		arrStartX+=3;
-		playerStartX+=3;
-	} else if (left && playerStartX > 10) {
-		arrStartX-=3;
-		playerStartX-=3;
-	}
-
-	//collision detection
-	if (space) {
-		if (!detect_collision()) {
-			setInterval(function(){
-				playerStartY += 5;
-			}, 100);
-		} else if (detect_collision()) {
-			playerStartY += 0;
-		}
-        }*/
 }
 
 function detect_collision(x, y) {
