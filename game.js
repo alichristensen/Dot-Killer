@@ -1,4 +1,4 @@
-const CANVAS_H = 580, CANVAS_W = 680, 
+const CANVAS_H = 580, CANVAS_W = 680,
     PLAYER_SPEED = CANVAS_W * 0.4,//this way it will always take the player a little over 2 seconds to travel the width of the canvas no matter what size the canvas is
     BALL_RADIUS = 8,
     BALL_SPEED = CANVAS_H * 0.75,//takes almost 1 second to travel the entire height of the canvas
@@ -75,11 +75,11 @@ function Player() {
         }
         if ((keys.isPressed(K_A) || keys.isPressed(K_LEFT)) && this.pos.x - this.width > + 6){
             this.pos.x -= this.speed * timepassed;
-            //if(!shooted){ball.x -= this.speed;} // LEFT && A    
+            //if(!shooted){ball.x -= this.speed;} // LEFT && A
         }
         if ((keys.isPressed(K_D) || keys.isPressed(K_RIGHT)) && this.pos.x + this.width < CANVAS_W-6){
             this.pos.x += this.speed * timepassed;
-            //if(!shooted){ball.x += this.speed;} // RIGHT && D    
+            //if(!shooted){ball.x += this.speed;} // RIGHT && D
         }
         //update the position of nextBall before shooting it
         if (this.nextBall){
@@ -102,7 +102,7 @@ function Player() {
 
     this.checkCollisions = (otherBalls) => {
         //this also checks for collisions with screen bounds in case balls will bounce or leave the screen
-        let ball;
+        let ball, other;
         for(let i = this.balls.length - 1; i > -1; i--){
             ball = this.balls[i];
             if (ball.pos.x - ball.radius > CANVAS_W || ball.pos.x + ball.radius < 0 || ball.pos.y - ball.radius < 0 || ball.pos.y + ball.radius > CANVAS_H){
@@ -111,6 +111,16 @@ function Player() {
                 this.balls.splice(i, 1);
                 console.log('destroy ball');
                 continue;
+            }
+            for (let j = otherBalls.length - 1; j > -1; j--){
+                other = otherBalls[j];
+                if (other.pos.distanceTo(ball.pos) <= ball.radius + other.radius){
+                    console.log('hit');
+                    //destroy both for now
+                    this.balls.splice(i, 1);
+                    otherBalls.splice(j, 1);
+                    break;
+                }
             }
         }
     }
@@ -202,15 +212,16 @@ KeyListener.prototype.addKeyPressListener = function (keyCode, callback) {
 };
 var keys = new KeyListener();//global KeyListener
 
+/*
 // check for the distance between radiuses, if collision => check color, if matches => destroy
 function collisionCheck(){
     for(var i = 0; i < ballArray.length; i++){
         var dist = Math.sqrt(Math.pow(ballArray[i].x - ball.x,2)+Math.pow(ballArray[i].y - ball.y,2));
         if (dist<(ballArray[i].r + ball.r)){
             if(ballArray[i].color === ball.color) {
-            	ballArray.splice(i, 1);
+                ballArray.splice(i, 1);
             } else {
-            	ballArray.splice(i, 0, new Ball(ball.x, ball.y-3, ball.color));
+                ballArray.splice(i, 0, new Ball(ball.x, ball.y-3, ball.color));
             }
             return true;
         }
@@ -220,7 +231,6 @@ function collisionCheck(){
 
 // calculate where stuff is
 function move() {
-    
     if(keys.isPressed(32))
         shooted = true;
     if(shooted){
@@ -252,6 +262,7 @@ function loop() {
     draw();
     requestAnimationFrame(loop);
 }
+*/
 
 function Game() {
     this.clock = null;
@@ -265,7 +276,7 @@ function Game() {
     }
 
     this.update = () => {
-        let timepassed = this.clock.tick() * 0.001,
+        let timepassed = this.clock.tick() * 0.001,//convert milliseconds to seconds
             ball = null;
         this.player.update(timepassed);
         this.player.checkCollisions(this.ballArray);
