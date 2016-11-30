@@ -8,9 +8,9 @@ const CANVAS_H = 580, CANVAS_W = 680,
     ctx = c.getContext("2d");
 
 //KEYS
-const K_A = 65, K_LEFT = 37,
-    K_D = 68, K_RIGHT = 39,
-    K_SPACE = 32;
+const KEY_A = 65, KEY_LEFT = 37,
+    KEY_D = 68, KEY_RIGHT = 39,
+    KEY_SPACE = 32;
 
 // I liked ali's function for getting a random color - just gave it a new name
 function getRandomColor() {
@@ -73,11 +73,11 @@ function Player() {
                 this.nextBall = new Ball(0,0,getRandomColor());
             }
         }
-        if ((keys.isPressed(K_A) || keys.isPressed(K_LEFT)) && this.pos.x - this.width > + 6){
+        if ((keys.isPressed(KEY_A) || keys.isPressed(KEY_LEFT)) && this.pos.x - this.width > + 6){
             this.pos.x -= this.speed * timepassed;
             //if(!shooted){ball.x -= this.speed;} // LEFT && A
         }
-        if ((keys.isPressed(K_D) || keys.isPressed(K_RIGHT)) && this.pos.x + this.width < CANVAS_W-6){
+        if ((keys.isPressed(KEY_D) || keys.isPressed(KEY_RIGHT)) && this.pos.x + this.width < CANVAS_W-6){
             this.pos.x += this.speed * timepassed;
             //if(!shooted){ball.x += this.speed;} // RIGHT && D
         }
@@ -86,7 +86,7 @@ function Player() {
             this.nextBall.pos.x = this.pos.x + this.width * 0.5 - this.nextBall.radius * 0.5;
             this.nextBall.pos.y = this.pos.y + this.height;
         }
-        if (keys.isPressed(K_SPACE)){
+        if (keys.isPressed(KEY_SPACE)){
             //shoot
             if (this.nextBall !== null){
                 this.nextBall.vel.set(0, 1);
@@ -265,7 +265,7 @@ function loop() {
 */
 
 function Game() {
-    this.clock = null;
+    this.clock = new Clock();
     this.player = new Player();
     this.ballArray = [];
 
@@ -303,5 +303,5 @@ function Game() {
 }
 
 var game = new Game();
-game.init();
+game.init();//can be called to reset the game
 game.loop();
