@@ -1,6 +1,7 @@
-const CANVAS_H = 580, CANVAS_W = 680,
+const CANVAS_H = 580,
+    CANVAS_W = 720,//680,
     PLAYER_SPEED = CANVAS_W * 0.4,//this way it will always take the player a little over 2 seconds to travel the width of the canvas no matter what size the canvas is
-    BALL_RADIUS = 8,
+    BALL_RADIUS = 9,
     BALL_SPEED = CANVAS_H * 0.75,//takes almost 1 second to travel the entire height of the canvas
     GRID_ROWS = 14, GRID_COLS = 42,
     colors = ["#76ff03", "#00e5ff", "#fff", "#d500f9", "#ffff00", "#ff3d00"],
@@ -52,15 +53,22 @@ function Point(x,y){
 }
 
 function Player() {
+    //the grid of balls without padding between them cause collisions with two target balls
+    //to favor the one with the lower [row][col] index - to help ease this we can try
+    //to subtract one unit from the Ball radius so that it will a little more forgiving when shooting
+    //down cooridors
     this.pos = new Point(
         CANVAS_W * 0.5,
         CANVAS_H * 0.05
     );
+
     this.width = CANVAS_W * 0.01;//always 1% of the width of the canvas
     this.height = CANVAS_H * 0.10;//always 10% of the height of the canvas
     this.speed = PLAYER_SPEED;
     this.balls = [];//store all the balls the player has shot - the player object is responsible for collision logic
+    this.nextBallRadius = BALL_RADIUS - 2;//slightly reduce the players ball size
     this.nextBall = new Ball(0,0,getRandomColor());//doesn't matter where it is right now because the player will update it every frame
+    this.nextBall.radius = this.nextBallRadius;
 
     this.lastShot = 0;//will be set to Date.now after shooting
     this.shootSpeed = 0.5;//seconds between shots
@@ -71,6 +79,7 @@ function Player() {
             if (this.lastShot >= this.shootSpeed){
                 this.lastShot -= this.shootSpeed;
                 this.nextBall = new Ball(0,0,getRandomColor());
+                this.nextBall.radius = this.nextBallRadius;
             }
         }
         if ((keys.isPressed(KEY_A) || keys.isPressed(KEY_LEFT)) && this.pos.x - this.width > + 6){
@@ -102,7 +111,9 @@ function Player() {
 
     this.checkCollisions = (otherBalls) => {
         //this also checks for collisions with screen bounds in case balls will bounce or leave the screen
+        //should return and object {row: r, col: c} if collision detected otherwise return null
         let ball, other;
+        let collisions = [];
         for(let i = this.balls.length - 1; i > -1; i--){
             ball = this.balls[i];
             if (ball.pos.x - ball.radius > CANVAS_W || ball.pos.x + ball.radius < 0 || ball.pos.y - ball.radius < 0 || ball.pos.y + ball.radius > CANVAS_H){
@@ -112,17 +123,22 @@ function Player() {
                 console.log('destroy ball');
                 continue;
             }
-            for (let j = otherBalls.length - 1; j > -1; j--){
-                other = otherBalls[j];
-                if (other.pos.distanceTo(ball.pos) <= ball.radius + other.radius){
-                    console.log('hit');
-                    //destroy both for now
-                    this.balls.splice(i, 1);
-                    otherBalls.splice(j, 1);
-                    break;
+            for (let r = 0; r < otherBalls.length; r++){
+                for (let c = 0; c < otherBalls[0].length; c++){
+                    other = otherBalls[r][c];
+                    if (other == null) continue;
+                    if (ball.pos.distanceTo(other.pos) <= ball.radius + other.radius){
+                        collisions.push({
+                            row: r,
+                            col: c
+                        });
+                        this.balls.splice(i, 1);
+                        break;//break this loop - don't return in case there are move player balls
+                    }
                 }
-            }
+            };
         }
+        return collisions.length > 0 ? collisions : null;
     }
 
     this.draw = () => {
@@ -174,21 +190,20 @@ function Ball(x, y, color) {
     }
 }
 
-//random colors: colors[Math.floor(Math.random() * colors.length)]
-// return an array of balls with the coordinates for placement on canvas
 function createBallArray(){
-    let ballArray = [];
-    var ballX = 12,
-        ballY = CANVAS_H + (BALL_RADIUS) - GRID_ROWS*(BALL_RADIUS*2);
-    for(var i = 0; i < GRID_ROWS*GRID_COLS;i++){
-        ballArray.push(new Ball(ballX, ballY, colors[Math.floor(Math.random() * colors.length)]));
-        ballX += BALL_RADIUS*2;
-        if(ballX > CANVAS_W - BALL_RADIUS){
-            ballX = 12; ballY += BALL_RADIUS*2;
+    let ballArray = [],
+        cols = CANVAS_W / (BALL_RADIUS * 2);
+    let startX = BALL_RADIUS
+    let startY = CANVAS_H - BALL_RADIUS;
+    for (let r = 0; r < GRID_ROWS; r++){
+        ballArray.push([]);
+        for (let c = 0; c < cols; c++){
+            ballArray[r][c] = new Ball(startX + BALL_RADIUS*2*c, startY - BALL_RADIUS*2*r, getRandomColor());
         }
     }
     return ballArray;
 }
+
 
 // this is our keypress function, just add keys.isPressed(*keynumber*) on move() to bind stuff to that keypress
 function KeyListener() {
@@ -212,62 +227,10 @@ KeyListener.prototype.addKeyPressListener = function (keyCode, callback) {
 };
 var keys = new KeyListener();//global KeyListener
 
-/*
-// check for the distance between radiuses, if collision => check color, if matches => destroy
-function collisionCheck(){
-    for(var i = 0; i < ballArray.length; i++){
-        var dist = Math.sqrt(Math.pow(ballArray[i].x - ball.x,2)+Math.pow(ballArray[i].y - ball.y,2));
-        if (dist<(ballArray[i].r + ball.r)){
-            if(ballArray[i].color === ball.color) {
-                ballArray.splice(i, 1);
-            } else {
-                ballArray.splice(i, 0, new Ball(ball.x, ball.y-3, ball.color));
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
-// calculate where stuff is
-function move() {
-    if(keys.isPressed(32))
-        shooted = true;
-    if(shooted){
-        ball.y += BALL_SPEED;
-        if(ball.y > CANVAS_W || collisionCheck()){
-            shooted = false;
-            ball.x = player.x; ball.y = player.y+player.h; ball.color = colors[Math.floor(Math.random() * colors.length)];
-        }
-    }
-}
-
-// draw stuff from move()
-function draw() {
-    // draw canvas
-        // draw player
-        // draw player ball
-    ctx.fillStyle = ball.color;
-    ctx.beginPath();
-    ctx.arc(ball.x,ball.y,ball.r,0,2*Math.PI);
-    ctx.fill();
-    // draw balls
-    ballArray.forEach( (ball) => {
-        ball.draw();
-    });
-}
-
-function loop() {
-    move();
-    draw();
-    requestAnimationFrame(loop);
-}
-*/
-
 function Game() {
     this.clock = new Clock();
     this.player = new Player();
-    this.ballArray = [];
+    this.ballArray = [[]];
 
     this.init = () => {
         this.clock = new Clock();
@@ -277,9 +240,49 @@ function Game() {
 
     this.update = () => {
         let timepassed = this.clock.tick() * 0.001,//convert milliseconds to seconds
-            ball = null;
+            ball = null,
+            collision = null;
         this.player.update(timepassed);
-        this.player.checkCollisions(this.ballArray);
+        collisions = this.player.checkCollisions(this.ballArray);
+        if (collisions){
+            collisions.forEach( (cell) => {
+                this.destroyBall(cell.row, cell.col, this.ballArray[cell.row][cell.col].color);
+            });
+        }
+    }
+
+    this.destroyBall = (row, col, color) => {
+        //destroy the ball at the col,row and check adjacent cells
+        //this function can be called recursively
+        if (this.ballArray[row][col] == null) return;
+        if (this.ballArray[row][col].color !== color){
+            //destroy the one ball and don't do neighbor checks
+            this.ballArray[row][col] = null;
+            return;
+        }
+        let neighbors = [];
+        console.log('destroy - row: ' + row + ' col: ' + col);
+        for (let r = -1; r <= 1; r++){
+            if (r+row >= 0 && r+row < this.ballArray.length){
+                for(let c = -1; c <= 1; c++){
+                    if (c+col >= 0 && c+col < this.ballArray[0].length){
+                        if (row+r === row && c === col+c) continue;
+                        //if the grid cell is empty, continue
+                        if (this.ballArray[r+row][c+col] == null || this.ballArray[r+row][c+col].color !== color) continue;
+                        //otherwise add the row,col to neighbors list
+                        console.log('add neighbor');
+                        neighbors.push({
+                            row: r+row,
+                            col: c+col
+                        })
+                    }
+                }
+            }
+        }
+        this.ballArray[row][col] = null;//unreference ball in this array
+        neighbors.forEach( (neighbor) => {
+            this.destroyBall(neighbor.row, neighbor.col, color);
+        })
     }
 
     this.draw  = () => {
@@ -290,8 +293,10 @@ function Game() {
 
         //draw game objects
         this.player.draw();
-        this.ballArray.forEach( (ball) => {
-            ball.draw();
+        this.ballArray.forEach( (row) => {
+            row.forEach( (ball) => {
+                if (ball) ball.draw()
+            });
         });
     }
 
