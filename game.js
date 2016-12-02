@@ -1,10 +1,10 @@
 const CANVAS_H = 580,
     CANVAS_W = 720,//680,
-    PLAYER_SPEED = CANVAS_W * 0.4,//this way it will always take the player a little over 2 seconds to travel the width of the canvas no matter what size the canvas is
-    BALL_RADIUS = 9,
+    PLAYER_SPEED = CANVAS_W * 0.33,//this way it will always take the player a little over 3 seconds to travel the width of the canvas no matter what size the canvas is
+    BALL_RADIUS = 10,
     BALL_SPEED = CANVAS_H * 0.75,//takes almost 1 second to travel the entire height of the canvas
     GRID_ROWS = 14, GRID_COLS = 42,
-    colors = ["#76ff03", "#00e5ff", "#fff", "#d500f9", "#ffff00", "#ff3d00"],
+    colors = ['blue', 'green', 'pink', 'red', 'white', 'yellow'],
     c = document.getElementById("canvas"),
     ctx = c.getContext("2d");
 
@@ -13,9 +13,24 @@ const KEY_A = 65, KEY_LEFT = 37,
     KEY_D = 68, KEY_RIGHT = 39,
     KEY_SPACE = 32;
 
+function imgLoaded(imgID){
+    colorMap[colorID].loaded = true;
+}
+
+//map color names to hex colors and images - colors can be used as a fallback if images don't load
+var colorMap = {
+    'blue': {hex: '#00e5ff', image: document.getElementById('blue')},
+    'green': {hex: '#76ff03', image: document.getElementById('green')},
+    'pink': {hex: '#d500f9', image: document.getElementById('pink')},
+    'red': {hex: '#ff3d00', image: document.getElementById('red')},
+    'white': {hex: '#fff', image: document.getElementById('white')},
+    'yellow': {hex: '#ffff00', image: document.getElementById('yellow')}
+}
+
 // I liked ali's function for getting a random color - just gave it a new name
 function getRandomColor() {
-    return colors[Math.floor(Math.random() * colors.length)];
+    //now returns a colorMap object
+    return colorMap[colors[Math.floor(Math.random() * colors.length)]];
 }
 
 function Point(x,y){
@@ -151,11 +166,31 @@ function Player() {
         ctx.fillStyle = "#fff";
         ctx.fillRect(this.pos.x - this.width * 0.5, this.pos.y, this.width, this.height);
         if (this.nextBall){
-            this.nextBall.draw();
+            if (this.nextBall.color.image.width > 0){//will be zero if it didnt load
+                ctx.drawImage(
+                    this.nextBall.color.image,
+                    this.pos.x - this.nextBall.radius,
+                    this.pos.y - this.nextBall.radius + this.height,
+                    this.nextBall.radius * 2,
+                    this.nextBall.radius * 2
+                );
+            } else {
+                this.nextBall.draw();
+            }
         }
 
         this.balls.forEach( (ball) => {
-            ball.draw(ctx);
+            if (ball.color.image.width > 0){
+                ctx.drawImage(
+                    ball.color.image,
+                    ball.pos.x - ball.radius,
+                    ball.pos.y - ball.radius,
+                    ball.radius * 2,
+                    ball.radius * 2
+                );
+            } else {
+                ball.draw(ctx);
+            }
         });
     }
 
@@ -188,7 +223,17 @@ function Ball(x, y, color) {
 
     //objects should be responsible for drawing themselves. helps keep things organized and cleans up the main draw function
     this.draw = () => {
-        ctx.fillStyle = this.color;
+        if (this.color.image.width > 0){
+            ctx.drawImage(
+                this.color.image,
+                this.pos.x - this.radius,
+                this.pos.y - this.radius,
+                this.radius*2,
+                this.radius*2
+            );
+            return;
+        }
+        ctx.fillStyle = this.color.hex;
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2*Math.PI, true);
         ctx.closePath();

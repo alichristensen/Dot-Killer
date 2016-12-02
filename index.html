@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html >
-	<head>
-	  <meta charset="UTF-8">
-	  <title>DOT KILLER</title>
-	  <link rel="stylesheet" href="style.css">
-	</head>
+    <head>
+        <meta charset="UTF-8">
+        <title>DOT KILLER</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <!-- if the images are not hidden they will appear above the canvas -->
+        <img class='hide' src='./images/blueBall.png' alt='blue' id='blue'/>
+        <img class='hide' src='./images/greenBall.png' alt='green' id='green' />
+        <img class='hide' src='./images/pinkBall.png' alt='pink' id='pink' />
+        <img class='hide' src='./images/redBall.png' alt='red' id='red' />
+        <img class='hide' src='./images/whiteBall.png' alt='white' id='white' />
+        <img class='hide' src='./images/yellowBall.png' alt='yellow' id='yellow' />
+        <canvas id="canvas" width="720" height="580"></canvas>
+        <script type="text/javascript" src="game.js"></script>
 
-	<body>
-	  <canvas id="canvas" width="720" height="580"></canvas>
-	  <script type="text/javascript" src="game.js"></script>
-
-	</body>
+    </body>
 </html>
