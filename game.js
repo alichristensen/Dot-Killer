@@ -128,10 +128,16 @@ function Player() {
                     other = otherBalls[r][c];
                     if (other == null) continue;
                     if (ball.pos.distanceTo(other.pos) <= ball.radius + other.radius){
-                        collisions.push({
-                            row: r,
-                            col: c
-                        });
+                        if (ball.color === other.color){
+                            collisions.push({
+                                row: r,
+                                col: c
+                            });
+                        } else {
+                            //should get this moved to the Game but have to rework - maybe send the Game object as a second parameter
+                            //so the scores can be manipulated by calling certain functions for matching and non-matching color collisions
+                            otherBalls[r][c] = null;
+                        }
                         this.balls.splice(i, 1);
                         break;//break this loop - don't return in case there are move player balls
                     }
