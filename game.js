@@ -17,6 +17,8 @@ function imgLoaded(imgID){
     colorMap[colorID].loaded = true;
 }
 
+var score_count = 0;
+
 //map color names to hex colors and images - colors can be used as a fallback if images don't load
 var colorMap = {
     'blue': {hex: '#00e5ff', image: document.getElementById('blue')},
@@ -255,6 +257,12 @@ function createBallArray(){
     return ballArray;
 }
 
+function drawScore(score) {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#00e5ff";
+    ctx.fillText("Score: " + score, 5, 15);
+}
+
 
 // this is our keypress function, just add keys.isPressed(*keynumber*) on move() to bind stuff to that keypress
 function KeyListener() {
@@ -313,6 +321,8 @@ function Game() {
         }
         let neighbors = [];
         console.log('destroy - row: ' + row + ' col: ' + col);
+        score_count++; 
+        console.log(score_count);
         for (let r = -1; r <= 1; r++){
             if (r+row >= 0 && r+row < this.ballArray.length){
                 for(let c = -1; c <= 1; c++){
@@ -344,6 +354,7 @@ function Game() {
 
         //draw game objects
         this.player.draw();
+        drawScore(score_count);
         this.ballArray.forEach( (row) => {
             row.forEach( (ball) => {
                 if (ball) ball.draw()
