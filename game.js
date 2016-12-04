@@ -4,18 +4,18 @@ const CANVAS_H = 580,
     BALL_RADIUS = 10,
     BALL_SPEED = CANVAS_H * 0.75,//takes almost 1 second to travel the entire height of the canvas
     GRID_ROWS = 14, GRID_COLS = 42,
-    colors = ['blue', 'green', 'pink', 'red', 'white', 'yellow'],
+    colors = ['blue', 'green', 'pink', 'red', 'white', 'yellow'],    
     c = document.getElementById("canvas"),
     ctx = c.getContext("2d");
-
+let availableColorsArray = [], ballArrayGlobal = [];
 //KEYS
 const KEY_A = 65, KEY_LEFT = 37,
     KEY_D = 68, KEY_RIGHT = 39,
     KEY_SPACE = 32;
 
-function imgLoaded(imgID){
+/*function imgLoaded(imgID){
     colorMap[colorID].loaded = true;
-}
+}*/
 
 //map color names to hex colors and images - colors can be used as a fallback if images don't load
 var colorMap = {
@@ -28,9 +28,17 @@ var colorMap = {
 }
 
 // I liked ali's function for getting a random color - just gave it a new name
-function getRandomColor() {
+function getRandomColor(array) {
     //now returns a colorMap object
-    return colorMap[colors[Math.floor(Math.random() * colors.length)]];
+    return colorMap[array[Math.floor(Math.random() * array.length)]];
+}
+
+function checkColors(){
+    for(var i = availableColorsArray.length - 1; i >= 0; i--){
+        if(!ballArrayGlobal.includes(availableColorsArray[i])){
+            availableColorsArray.splice(i,1);
+        }        
+    }
 }
 
 function Point(x,y){
@@ -82,7 +90,7 @@ function Player() {
     this.speed = PLAYER_SPEED;
     this.balls = [];//store all the balls the player has shot - the player object is responsible for collision logic
     this.nextBallRadius = BALL_RADIUS - 2;//slightly reduce the players ball size
-    this.nextBall = new Ball(0,0,getRandomColor());//doesn't matter where it is right now because the player will update it every frame
+    this.nextBall = new Ball(0,0,getRandomColor(availableColorsArray));//doesn't matter where it is right now because the player will update it every frame
     this.nextBall.radius = this.nextBallRadius;
 
     this.lastShot = 0;//will be set to Date.now after shooting
@@ -93,7 +101,7 @@ function Player() {
             this.lastShot += timepassed;
             if (this.lastShot >= this.shootSpeed){
                 this.lastShot -= this.shootSpeed;
-                this.nextBall = new Ball(0,0,getRandomColor());
+                this.nextBall = new Ball(0,0,getRandomColor(availableColorsArray));
                 this.nextBall.radius = this.nextBallRadius;
             }
         }
@@ -189,7 +197,7 @@ function Player() {
                     ball.radius * 2
                 );
             } else {
-                ball.draw(ctx);
+                ball.draw();
             }
         });
     }
@@ -242,14 +250,20 @@ function Ball(x, y, color) {
 }
 
 function createBallArray(){
-    let ballArray = [],
-        cols = CANVAS_W / (BALL_RADIUS * 2);
-    let startX = BALL_RADIUS
+    let cols = CANVAS_W / (BALL_RADIUS * 2);
+    let startX = BALL_RADIUS;
+    let ballArray = [];
     let startY = CANVAS_H - BALL_RADIUS;
     for (let r = 0; r < GRID_ROWS; r++){
         ballArray.push([]);
         for (let c = 0; c < cols; c++){
-            ballArray[r][c] = new Ball(startX + BALL_RADIUS*2*c, startY - BALL_RADIUS*2*r, getRandomColor());
+            let color = getRandomColor(colors);
+            ballArray[r][c] = new Ball(startX + BALL_RADIUS*2*c, startY - BALL_RADIUS*2*r, color);
+            if(!availableColorsArray.includes(color.image.id)){
+                console.log(color.image.id);
+                availableColorsArray.push(color.image.id);
+                console.log(availableColorsArray);
+            }
         }
     }
     return ballArray;
@@ -285,8 +299,8 @@ function Game() {
 
     this.init = () => {
         this.clock = new Clock();
-        this.player = new Player();
         this.ballArray = createBallArray();
+        this.player = new Player();
     }
 
     this.update = () => {
@@ -343,12 +357,12 @@ function Game() {
         ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
         //draw game objects
-        this.player.draw();
         this.ballArray.forEach( (row) => {
             row.forEach( (ball) => {
                 if (ball) ball.draw()
             });
         });
+        this.player.draw();        
     }
 
     this.loop = () => {
