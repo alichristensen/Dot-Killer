@@ -3,7 +3,7 @@ const CANVAS_H = 580,
     PLAYER_SPEED = CANVAS_W * 0.33,//this way it will always take the player a little over 3 seconds to travel the width of the canvas no matter what size the canvas is
     BALL_RADIUS = 10,
     BALL_SPEED = CANVAS_H * 0.75,//takes almost 1 second to travel the entire height of the canvas
-    GRID_ROWS = 3, GRID_COLS = 42,
+    GRID_ROWS = 14, GRID_COLS = 42,
     colors = ['blue', 'green', 'pink', 'red', 'white', 'yellow'],
     c = document.getElementById("canvas"),
     ctx = c.getContext("2d");
@@ -348,9 +348,8 @@ function Game() {
     }
 
     this.checkArray = () => {
-
+    	//returns false when the screen is cleared of all balls
     	let count = 0;
-
     	this.ballArray.forEach( (row) => {
     		row.forEach ( (ball) => {
     			if (ball) {
@@ -358,11 +357,9 @@ function Game() {
     			}
     		});
     	});
-
     	if (count>=1) {
     		return true;
     	}
-
     }
 
     this.draw  = () => {
