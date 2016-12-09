@@ -3,7 +3,7 @@ const CANVAS_H = 580,
     PLAYER_SPEED = CANVAS_W * 0.33,//this way it will always take the player a little over 3 seconds to travel the width of the canvas no matter what size the canvas is
     BALL_RADIUS = 10,
     BALL_SPEED = CANVAS_H * 0.75,//takes almost 1 second to travel the entire height of the canvas
-    GRID_ROWS = 14, GRID_COLS = 42,
+    GRID_ROWS = 3, GRID_COLS = 42,
     colors = ['blue', 'green', 'pink', 'red', 'white', 'yellow'],
     c = document.getElementById("canvas"),
     ctx = c.getContext("2d");
@@ -194,6 +194,7 @@ function Player() {
                 ball.draw(ctx);
             }
         });
+
     }
 
 }
@@ -254,6 +255,7 @@ function createBallArray(){
             ballArray[r][c] = new Ball(startX + BALL_RADIUS*2*c, startY - BALL_RADIUS*2*r, getRandomColor());
         }
     }
+    console.log(ballArray);
     return ballArray;
 }
 
@@ -321,8 +323,7 @@ function Game() {
         }
         let neighbors = [];
         console.log('destroy - row: ' + row + ' col: ' + col);
-        score_count++; 
-        console.log(score_count);
+        score_count++;
         for (let r = -1; r <= 1; r++){
             if (r+row >= 0 && r+row < this.ballArray.length){
                 for(let c = -1; c <= 1; c++){
@@ -346,20 +347,45 @@ function Game() {
         })
     }
 
+    this.checkArray = () => {
+
+    	let count = 0;
+
+    	this.ballArray.forEach( (row) => {
+    		row.forEach ( (ball) => {
+    			if (ball) {
+    				count++;
+    			}
+    		});
+    	});
+
+    	if (count>=1) {
+    		return true;
+    	}
+
+    }
+
     this.draw  = () => {
+
         //clear canvas
         ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-        //draw game objects
-        this.player.draw();
-        drawScore(score_count);
-        this.ballArray.forEach( (row) => {
-            row.forEach( (ball) => {
-                if (ball) ball.draw()
-            });
-        });
+        if (this.checkArray()) {
+        	//draw game objects
+        	this.player.draw();
+        	drawScore(score_count);
+        	this.ballArray.forEach( (row) => {
+            	row.forEach( (ball) => {
+                	if (ball) ball.draw()
+            	});
+        	});
+        } else {
+        	ctx.font = "32px Arial";
+    		ctx.fillStyle = "#00e5ff";
+    		ctx.fillText("Final Score: " + score_count, CANVAS_W/4, CANVAS_H/2);
+        }
     }
 
     this.loop = () => {
